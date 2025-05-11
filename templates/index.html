@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{{ g.app_name }} {{ g.app_version }} : {{ session["username"] }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="adminlte3/plugins/fontawesome-free/css/all.min.css">
+
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="adminlte3/plugins/daterangepicker/daterangepicker.css">
+
+    <!-- Toastr -->
+    <link rel="stylesheet" href="adminlte3/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+    <link rel="stylesheet" href="adminlte3/plugins/toastr/toastr.min.css">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="adminlte3/plugins/select2/css/select2.min.css">
+    <link rel="stylesheet" href="adminlte3/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+    <!-- iCheck for checkboxes and radio inputs -->
+    <link rel="stylesheet" href="adminlte3/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+
+    <link rel="stylesheet" href="adminlte3/plugins/dropzone/dropzone.css">
+    <!-- DataTables -->
+    <link rel="stylesheet" href="adminlte3/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="adminlte3/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+    <link rel="stylesheet" href="adminlte3/plugins/fullcalendar/main.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="adminlte3/dist/css/adminlte.min.css">
+
+</head>
+<!-- page script -->
+<!-- BEGIN Add date time picker -->
+<!-- jQuery -->
+<script src="adminlte3/plugins/jquery/jquery.min.js"></script>
+<body class="sidebar-mini sidebar-collapse layout-fixed layout-navbar-fixed layout-footer-fixed ">
+<div class="wrapper">
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-dark fixed-top">
+        {% include 'header.html' %}
+    </nav>
+    <!-- /.navbar -->
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        {% include 'menu.html' %}
+    </aside>
+
+    <!-- Content Wrapper. Contains page content ADMINLTE3 -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>Project List</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                            <li class="breadcrumb-item active">Project List</li>
+                        </ol>
+                    </div>
+                </div>
+            </div><!-- /.container-fluid -->
+        </section>
+        <!-- Main content -->
+        <section class="content">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row full-width">
+								<div class="col-sm-10">
+                                    <div class="form-inline">
+                                        <input type="text" id=SEARCH_ID placeHolder="search"
+                                               style="width:200px;" class="form-control mr-2"/>
+                                        <!--<input type="text" id=SEARCH_TIME class="form-control mr-2" /> -->
+                                        <button class="btn btn-default" onclick="reload_table()"><i class="fas fa-search"></i> Search</button>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2 full-right">
+                                    <button class="btn btn-success pull-right" onclick="add_row()"><i class="fa fa-plus"></i> Add New</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.card-header -->
+                        <div class="card-body" style="overflow: auto;">
+                            <table cellspacing="0"
+                                   class="table table-striped table-bordered nowrap dataTable"
+                                   style="background-color:white"
+                                   width="100%" id="table" style="background-color:#ffffff">
+
+                            </table>
+                        </div><!-- /.box-body -->
+                    </div><!-- /.card -->
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </section><!-- /.content -->
+    </div>
+    <div class="clearfix"></div>
+</div><!-- /.content-wrapper -->
+<!-- page script -->
+<script type="text/javascript">
+var save_method; //for save method string
+var table;
+var myData;
+$(document).ready(function() {
+	// START Date picker
+	$("#SEARCH_TIME").daterangepicker({
+		locale: {
+	        format: 'DD/MM/YYYY',
+	        "separator": " - ",
+	    },
+		opens: 'left',
+		startDate: moment().add(-12, 'month'),
+	}, function(start, end, label) {
+		//console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+	}).on('apply.daterangepicker', function (ev, picker) {
+		reload_table();
+	});
+	//
+	var myColumnDefine = [
+	    /*
+		{"responsivePriority": 1, "orderable": false, "title": "#" , "data":null,
+			"render": function (data, type, row, meta) {
+				return meta.row + 1;
+			}
+		},
+		*/
+		{"responsivePriority": 3, "orderable": false, "title": "ProjectName" , "data":"project_name" , "name":"project_name" , "class":"text-left",
+		    render: function ( data, type, row ) {
+				html = '<i class="fas fa-star text-warning"></i> ' + data + '<br>';
+		        html += '<button class="btn btn-xs btn-success" onclick="edit_row('+row.project_id+')">' + '<i class="fas fa-edit"></i> Edit' + '</button>';
+		        html += ' <button class="btn btn-xs btn-primary" onclick="add_class('+row.project_id+')">' + '<i class="fas fa-plus"></i> Add Class' + '</button>';
+		        html += ' <button class="btn btn-xs btn-primary" onclick="start_train('+row.project_id+')">' + '<i class="fas fa-config"></i> Training' + '</button>'+ '<br>';
+				html += ' <span class="badge badge-success">'+row.project_status+'</span>';
+		        return html;
+			}
+		},
+		{"responsivePriority": 2, "orderable": false, "title": "Classes" , "data":"created_at" , "name":"created_at" ,  "class":"text-left"
+		    , render: function ( data, type, row ) {
+		        html = '';
+		        $.each(row.classes, function (index, value) {
+					html += '<button class="btn text-left" style="width:200px">'
+					    + '<span class="badge badge-warning navbar-badge">' + value.file_count +'</span>'
+					    + value.class_name
+					    // + '<i class="far fa-circle text-warning"></i> '
+					    + '</button> '
+		                + '<button class="btn btn-xs btn-warning" onclick="edit_class('+value.class_id+')">' + '<i class="fas fa-edit"></i>' + '</button>'
+                        + ' <button class="btn btn-xs btn-warning" onclick="delete_class('+value.class_id+')">' + '<i class="far fa-trash-alt"></i>' + '</button>'
+                        + ' <button class="btn btn-xs btn-danger" onclick="delete_image('+value.class_id+')">' + '<i class="far fa-trash-alt"></i>' + '</button>'
+					    + '<br>';
+				});
+				if( row.classes.length==0 ){
+				    html = 'No class. ';
+				}
+				return html;
+			}
+		},
+		/*
+        {"responsivePriority": 18, "orderable": false, "title": "Status" , "data":"project_status" , "name":"project_status" , "class":"text-center",
+			render: function ( data, type, row ) {
+				if(data==null || (data.length==0) || (data==""))return "";
+				return data=="Init"?'<span class="badge badge-success">'+data+'</span>':'<span class="badge badge-warning">'+data+'</span>';
+			}
+		},
+
+		{"responsivePriority": 2, "orderable": false, "title": "Action" , "data":"project_id" , "name":"Action" ,  "class":"text-center"
+		    , render: function ( data, type, row ) {
+		        html = '<button class="btn btn-sm btn-success" onclick="edit_row('+row.project_id+')">' + '<i class="fas fa-edit"></i> Edit' + '</button>';
+		        html += ' <button class="btn btn-sm btn-primary" onclick="add_class('+row.project_id+')">' + '<i class="fas fa-plus"></i> Add Class' + '</button>';
+				return html;
+			}
+		},
+		*/
+	];
+    //datatables
+    table = $('#table').on('preXhr.dt', function ( e, settings, data ) {
+			data.sessionId = $('#sessionId').val();
+		}).DataTable({
+		oLanguage: {
+			sProcessing: "<img src='ajax-loading.gif'>Loading..."
+		},
+        "processing": true, //Feature control the processing indicator.
+        "serverSide": true, //Feature control DataTables' server-side processing mode.
+        "order": [], //Initial no order.
+        // Load data for the table's content from an Ajax source
+        "ajax": {
+			"url": "projects?a=listobj",
+            "type": "POST",
+			"data": function ( d ) {
+				if($('#SEARCH_TIME').val()!==undefined){
+					var dat = $('#SEARCH_TIME').val().split(" - ");
+					d.DATE0 = moment(dat[0].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
+					d.DATE1 = moment(dat[1].trim(), 'DD/MM/YYYY').format('YYYY-MM-DD');
+				}
+				d.SEARCH_ID = $("#SEARCH_ID").val();
+				return  $.extend(d, myData);
+			},
+			"dataSrc": function (json) {
+				var return_data = json.data;
+				return return_data;
+			}
+        },
+		responsive: true,
+		"columns": myColumnDefine,
+		"rowCallback":function ( row, data, index ) {
+			//console.log( data);
+			//if( parseInt( data.project_id )> 0){
+			//	var action = '<a class="btn btn-sm btn-primary mr-2" href="javascript:void(0)" title="View" onclick="edit_row('+"'"+data.project_id+"'"+')"><i class="fa fa-eye"></i></a>';
+			//		//action += '<a class="btn btn-sm btn-danger" href="javascript:void(0)" title="Delete" onclick="delete_row('+"'"+data.project_id+"'"+')"><i class="fa fa-trash"></i></a>';
+			//	$('td', row).eq(myColumnDefine.length-1).html(action);
+			//}
+		},
+		"drawCallback": function(settings) {
+			//console.log(settings.json);
+			//console.log( $('#dv_datatype :selected').length );
+			if( settings.json.hasOwnProperty('status') && settings.json.status==false ){
+				alert("Error: " + settings.json.msg);
+			}
+			if($('#eqp_id :selected').length>0){
+				return;
+			}
+
+			if(settings.json.eqplist!=null){
+				$.each(settings.json.eqplist, function (index, value) {
+					$('#eqp_id').append($('<option/>', {
+						value: ''+value.eqp_id,
+						text : ''+value.eqp_name
+					}));
+				});
+			}
+
+		   //do whatever
+		},
+        //Set column definition initialisation properties.
+        "columnDefs": [
+		],
+        "bPaginate": true, // show/hide paging
+		"bLengthChange": true, //
+		"bFilter": false, // Search box
+		"bInfo": true, //
+		"bAutoWidth": false, //
+		"pageLength": "25",
+		//"bAutoWidth": true, //
+		//"scrollY": "350px",
+		//"scrollCollapse":true,
+		"paging": true,
+    });
+    //set input/textarea/select event when change value, remove class error and remove text help block
+	/*
+    $("input").change(function() {
+        $(this).parent().parent().removeClass('has-error');
+        $(this).next().empty();
+    });
+    $("textarea").change(function() {
+        $(this).parent().parent().removeClass('has-error');
+        $(this).next().empty();
+    });
+    $("select").change(function() {
+        $(this).parent().parent().removeClass('has-error');
+        $(this).next().empty();
+    });
+	*/
+	$('[name="STS"]').bootstrapSwitch('state', true);
+	//$("input[data-bootstrap-switch]").each(function(){
+	//	$(this).bootstrapSwitch('state', $(this).prop('checked'));
+    //});
+
+});
+
+function add_row()
+{
+    save_method = 'add';
+    $('#form')[0].reset(); // reset form on modals
+	$('[name="STS"]').bootstrapSwitch('state', true);
+	$('.form-group').removeClass('has-error'); // clear error class
+    $('.help-block').empty(); // clear error string
+    $('#modal_form').modal('show'); // show bootstrap modal
+    $('.modal-title').text('Thêm'); // Set Title to Bootstrap modal title
+}
+function edit_row(id) {
+    save_method = 'update';
+    $('#form')[0].reset(); // reset form on modals
+    $('.form-group').removeClass('has-error'); // clear error class
+    $('.help-block').empty(); // clear error string
+    //Ajax Load data from ajax
+    $.ajax({
+		url : "projects?a=edit"+"&id="+id,
+        type : "POST",
+		data:{
+			sessionId: $("#sessionId").val()
+		},
+        dataType: "JSON",
+        success: function(data) {
+            console.log( data );
+            //
+            $('[name="id"]').val(data.project_id);
+            $('[name="project_name"]').val(data.project_name);
+            //
+            $('#modal_form').modal('show'); // show bootstrap modal when complete loaded
+            $('.modal-title').text('Edit'); // Set title to Bootstrap modal title
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Error when get data');
+        }
+    });
+}
+function reload_table()
+{
+	table.ajax.reload(null,false); //reload datatable ajax
+}
+function validateForm(){
+	var isError = true;
+	if( $('[name="project_name"]').val().length==0){
+		$('[name="project_name"]').parent().parent().addClass('has-error');
+		$('[name="project_name"]').next().text("[project_name]: Invalid");
+		isError = false;
+	}
+	else{
+		$('[name="project_name"]').parent().parent().removeClass('has-error');
+		$('[name="project_name"]').next().text("");
+	}
+
+	//
+	return isError;
+}
+function save()
+{
+	if( validateForm() == false ){
+		return;
+	}
+    $('#btnSave').text('Saving...'); //change button text
+    $('#btnSave').attr('disabled', true); //set button disable
+    var url;
+    if(save_method == 'add') {
+        url = "/projects?a=add";
+    } else {
+        url = "/projects?a=update";
+    }
+    // ajax adding data to database
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: $('#form').serialize()+"&sessionId="+$("#sessionId").val(),
+        dataType: "JSON",
+        success: function(data) {
+            if (data.status) //if success close modal and reload ajax table
+            {
+                $('#modal_form').modal('hide');
+                reload_table();
+            } else {
+                for (var i = 0; i < data.inputerror.length; i++) {
+                    //select parent twice to select div form-group class and add has-error class
+                    $('[name="' + data.inputerror[i] + '"]').parent().parent().addClass('has-error');
+                    //select span help-block class set text error string
+                    $('[name="' + data.inputerror[i] + '"]').next().text(data.error_string[i]);
+                }
+            }
+            $('#btnSave').text('Save'); //change button text
+            $('#btnSave').attr('disabled', false); //set button enable
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Error edit data');
+            $('#btnSave').text('Save'); //change button text
+            $('#btnSave').attr('disabled', false); //set button enable
+        }
+    });
+}
+
+function delete_project(id) {
+    if (confirm('Are you sure to delete project?')) {
+        id = $('[name="id"]').val()
+        // ajax delete data to database
+        $.ajax({
+			url : "/projects?a=delete" + "&id="+id,
+            type : "POST",
+			data:{
+				sessionId: $("#sessionId").val()
+			},
+            dataType: "JSON",
+            success: function(data) {
+                //if success reload ajax table
+                $('#modal_form').modal('hide');
+                reload_table();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error delete data');
+            }
+        });
+    }
+}
+
+function start_train(id) {
+    if (confirm('Will put project to training queue?')) {
+        // ajax delete data to database
+        $.ajax({
+			url : "/projects?a=start_train" + "&id="+id,
+            type : "POST",
+			data:{
+				sessionId: $("#sessionId").val()
+			},
+            dataType: "JSON",
+            success: function(data) {
+                //if success reload ajax table
+                $('#modal_form').modal('hide');
+                reload_table();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error delete data');
+            }
+        });
+    }
+}
+</script>
+
+<!-- Bootstrap modal -->
+<div class="modal fade" id="modal_form" role="dialog">
+    <div class="modal-dialog modal-xl ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Form</div>
+                <button aria-label="Close" class="close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body form">
+                <form action="#" class="form-horizontal" id="form" name="form">
+                    <input name="id" type="hidden" value="">
+                    <div class="form-body">
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Project Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="project_name" id="project_name" class="form-control" maxlength="30" placeHolder=""/>
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="btnDeleteProject" onclick="delete_project()" type="button"><i class="fas fa-trash"></i> Delete</button>
+                <button class="btn btn-warning" data-dismiss="modal" type="button"><i class="fas fa-close"></i> Cancel </button>
+                <button class="btn btn-primary" id="btnSave" onclick="save()" type="button"><i class="fas fa-save"></i> Save</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+{% include 'modal_class.html' %}
+
+<!-- End Bootstrap modal -->
+
+</div>
+<!-- /.content-wrapper -->
+<footer class="main-footer">
+    {% include 'footer.html' %}
+</footer>
+
+<!-- Control Sidebar -->
+<aside class="control-sidebar control-sidebar-dark">
+    <!-- Control sidebar content goes here -->
+</aside>
+<!-- /.control-sidebar -->
+</div>
+<!-- ./wrapper -->
+<!-- Bootstrap 4 -->
+<script src="adminlte3/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="adminlte3/plugins/jquery-knob/jquery.knob.min.js"></script>
+<!-- DataTables -->
+<script src="adminlte3/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.8/xlsx.full.min.js"></script>
+<script src="adminlte3/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="adminlte3/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="adminlte3/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<script src="adminlte3/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+<script src="adminlte3/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+<script src="adminlte3/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+
+<!-- Bootstrap Switch -->
+<script src="adminlte3/plugins/bootstrap-switch/js/bootstrap-switch.js"></script>
+<script src="adminlte3/plugins/moment/moment.min.js"></script>
+<script src="adminlte3/plugins/daterangepicker/daterangepicker.js"></script>
+
+<script src="adminlte3/plugins/dropzone/dropzone.js"></script>
+
+<!-- Select2 -->
+<script src="adminlte3/plugins/select2/js/select2.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<!-- Toastr -->
+<script src="adminlte3/plugins/sweetalert2/sweetalert2.min.js"></script>
+<script src="adminlte3/plugins/toastr/toastr.min.js"></script>
+<!-- AdminLTE App -->
+<script src="adminlte3/dist/js/adminlte.min.js"></script>
+<script src="adminlte3/dist/js/demo.js"></script>
+</script>
+</body>
+</html>

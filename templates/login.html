@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Log in</title>
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="adminlte3/plugins/fontawesome-free/css/all.min.css">
+  <!-- Ionicons -->
+  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+  <!-- icheck bootstrap -->
+  <link rel="stylesheet" href="adminlte3/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="adminlte3/dist/css/adminlte.min.css">
+  <!-- Google Font: Source Sans Pro -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+</head>
+<body class="hold-transition login-page">
+<div class="login-box">
+  
+  <!-- /.login-logo -->
+  <div class="card"  style="border-radius: 25px;">
+    <div class="card-body login-card-body" style="border-radius: 25px;">
+		<div class="login-logo" style="text-align: center; font-size: 14px; color: #3c8dbc; padding-bottom:20px">
+		<H1>
+			LOGIN
+		</H1>
+		</div>
+      <p class="login-box-msg">Sign in to start your session</p>
+
+      <form id="formLogin" method="post">
+        <div class="input-group mb-3">
+          <input type="text" id="email" class="form-control" placeholder="Email">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-envelope"></span>
+            </div>
+          </div>
+        </div>
+        <div class="input-group mb-3">
+          <input type="password" id="password" class="form-control" placeholder="Password">
+          <div class="input-group-append">
+            <div class="input-group-text">
+              <span class="fas fa-lock"></span>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <!-- /.col -->
+          <div class="col-12">
+            <button type="button" id="btnLogin" class="btn btn-lg btn-primary btn-block" style="border-radius: 20px;">Sign In</button>
+          </div>
+          <!-- /.col -->
+        </div>
+      </form>
+
+    </div>
+    <!-- /.login-card-body -->
+  </div>
+</div>
+<!-- /.login-box -->
+
+<!-- jQuery -->
+<script src="adminlte3/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="adminlte3/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="adminlte3/dist/js/adminlte.min.js"></script>
+<script>
+var finger = [];
+
+function login(){
+    console.log("LOGIN");
+	if( $('button').prop('disabled')==true ){
+		return false;
+	}
+	var email = $("#email").val().trim();
+	var password = $("#password").val().trim();
+	// Checking for blank fields.
+	var error = false;
+	var errorMsg = "";
+	if( email.length<2){
+		$('input[type="text"]').css("border","2px solid red");
+		errorMsg += "[ID]: Login ID invalid";
+		$('input[type="text"]').focus();
+		error=true;
+	}
+	else{
+		$('input[type="text"]').css("border","");
+	}
+	if( password.length<2){
+		$('input[type="password"]').css("border","2px solid red");
+		errorMsg += "<br/> [Password]: invalid";
+		$('input[type="password"]').focus();
+		error=true;
+	}
+	else{
+		$('input[type="password"]').css("border","");
+	}
+	$('.login-box-msg').html(errorMsg);
+	if(error==true){
+		$('.login-box-msg').css('color', 'red');
+		return false;
+	}
+	$('.login-box-msg').html("Login...");
+	$('.login-box-msg').css('color', '');
+	$('button').prop('disabled', true);
+	$.post(
+		"/login",
+		{
+			func: "login",
+			email: email,
+			password: password,
+			finger:finger
+		},
+		function(data) {
+		    //console.log( sdata );
+			//$('.login-box-msg').html(sdata);
+			//var data = jQuery.parseJSON( sdata );
+			console.log( data );
+			//
+			$('.login-box-msg').html("Login 4..."+data.status);
+			if(data.status==="ok") {
+				$('.login-box-msg').css('color', '');
+				$('.login-box-msg').html("Successful! Login...");
+				window.location="/home";
+			}
+			else{
+				$('button').prop('disabled', false);
+				$('input[type="text"]').focus();
+				$('.login-box-msg').css('color', 'red');
+				alert(data.reason);
+				$('.login-box-msg').html("Error: "+data.reason);
+			}
+	});
+	return false;
+}
+function getIpinfo(){
+	$('.login-box-msg').html("Login...");
+	$.ajax({
+		url: "https://ipinfo.io/json",
+		dataType: "jsonp",
+		success: function (data) {
+			if( data.hasOwnProperty("ip")==true ){
+				$('.login-box-msg').html("ID...");
+				finger["ip"]=data;
+				$('button').prop('disabled', false);
+				$( "#email" ).focus();
+			}
+			else{
+				$('.login-box-msg').html("Wait...");
+				setTimeout( "getIpinfo()", 5000 );
+			}
+		}
+	});
+}
+$(document).ready(function() {
+	getIpinfo();
+
+	$( "#password" ).keypress(function( event ) {
+	  if ( event.which == 13 ) {
+		login();
+		return false; // prevent the button click from happening
+	  }
+	});
+	$( "#email" ).keypress(function( event ) {
+	  if ( event.which == 13 ) {
+		login();
+		return false; // prevent the button click from happening
+	  }
+	});
+
+	$('.login-box-msg').html("Sign in to start your session ...");
+	$('button').prop('disabled', false);
+	$( "#email" ).focus();
+
+	//
+	$("#btnLogin").click(function(){
+		login();
+		return false;
+	});
+});
+
+
+(function () {
+    'use strict';
+    var module = {
+        options: [],
+        header: [navigator.platform, navigator.userAgent, navigator.appVersion, navigator.vendor, window.opera],
+        dataos: [
+            { name: 'Windows Phone', value: 'Windows Phone', version: 'OS' },
+            { name: 'Windows', value: 'Win', version: 'NT' },
+            { name: 'iPhone', value: 'iPhone', version: 'OS' },
+            { name: 'iPad', value: 'iPad', version: 'OS' },
+            { name: 'Kindle', value: 'Silk', version: 'Silk' },
+            { name: 'Android', value: 'Android', version: 'Android' },
+            { name: 'PlayBook', value: 'PlayBook', version: 'OS' },
+            { name: 'BlackBerry', value: 'BlackBerry', version: '/' },
+            { name: 'Macintosh', value: 'Mac', version: 'OS X' },
+            { name: 'Linux', value: 'Linux', version: 'rv' },
+            { name: 'Palm', value: 'Palm', version: 'PalmOS' }
+        ],
+        databrowser: [
+            { name: 'Chrome', value: 'Chrome', version: 'Chrome' },
+            { name: 'Firefox', value: 'Firefox', version: 'Firefox' },
+            { name: 'Safari', value: 'Safari', version: 'Version' },
+            { name: 'Internet Explorer', value: 'MSIE', version: 'MSIE' },
+            { name: 'Opera', value: 'Opera', version: 'Opera' },
+            { name: 'BlackBerry', value: 'CLDC', version: 'CLDC' },
+            { name: 'Mozilla', value: 'Mozilla', version: 'Mozilla' }
+        ],
+        init: function () {
+            var agent = this.header.join(' '),
+                os = this.matchItem(agent, this.dataos),
+                browser = this.matchItem(agent, this.databrowser);
+
+            return { os: os, browser: browser };
+        },
+        matchItem: function (string, data) {
+            var i = 0,
+                j = 0,
+                html = '',
+                regex,
+                regexv,
+                match,
+                matches,
+                version;
+
+            for (i = 0; i < data.length; i += 1) {
+                regex = new RegExp(data[i].value, 'i');
+                match = regex.test(string);
+                if (match) {
+                    regexv = new RegExp(data[i].version + '[- /:;]([\\d._]+)', 'i');
+                    matches = string.match(regexv);
+                    version = '';
+                    if (matches) { if (matches[1]) { matches = matches[1]; } }
+                    if (matches) {
+                        matches = matches.split(/[._]+/);
+                        for (j = 0; j < matches.length; j += 1) {
+                            if (j === 0) {
+                                version += matches[j] + '.';
+                            } else {
+                                version += matches[j];
+                            }
+                        }
+                    } else {
+                        version = '0';
+                    }
+                    return {
+                        name: data[i].name,
+                        version: parseFloat(version)
+                    };
+                }
+            }
+            return { name: 'unknown', version: 0 };
+        }
+    };
+    var e = module.init(),
+        debug = '';
+	//console.log( navigator );
+	var nav = {
+		productSub: navigator.productSub,
+		vendor: navigator.vendor,
+		maxTouchPoints: navigator.maxTouchPoints,
+		hardwareConcurrency:navigator.hardwareConcurrency,
+		cookieEnabled:navigator.cookieEnabled,
+		appCodeName:navigator.appCodeName,
+		appName:navigator.appName,
+		appVersion: navigator.appVersion,
+		platform: navigator.platform,
+		product:navigator.product,
+		userAgent:navigator.userAgent,
+		language: navigator.language,
+		languages:navigator.languages,
+		onLine: navigator.onLine,
+		doNotTrack: navigator.doNotTrack
+	};
+    finger = { e, nav};
+
+}());
+</script>
+</body>
+</html>
