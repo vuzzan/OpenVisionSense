@@ -3,12 +3,9 @@ import os, shutil
 import logging
 from werkzeug.utils import secure_filename
 from db import query_db, init_db
-import job
 from flask_apscheduler import APScheduler
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(filename='logs/web.log', level=logging.DEBUG)
-
+import job
 
 app = Flask(__name__,
             static_folder='./static',
@@ -16,8 +13,19 @@ app = Flask(__name__,
 
 app.secret_key = 'neoapp123'  # Needed for flash messages
 
+
 scheduler = APScheduler()
 
+if not os.path.exists("./logs"):
+    os.makedirs("./logs")
+
+# Configure logger for module1
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+fh1 = logging.FileHandler('logs/web.log')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh1.setFormatter(formatter)
+logger.addHandler(fh1)
 
 @app.before_request
 def set_global_variables():
@@ -57,12 +65,8 @@ def login_action():
     username = request.form['email']
     password = request.form['password']
 
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE username = ? AND password = ?",
+    user = query_db("SELECT * FROM users WHERE username = ? AND password = ?",
               (username, password))
-    user = c.fetchone()
-    conn.close()
     # logger.info(user)
     if user:
         session['username'] = username  # Lưu username vào session
@@ -104,7 +108,7 @@ def projects():
         return jsonify(obj), 200
     elif action == "edit_class":
         sql = "SELECT * FROM project_classes where class_id=?"
-        obj = query_db(sql, (request.args.get('id')), True)
+        obj = query_db(sql, (request.args.get('id'), ), True)
         return jsonify(obj), 200
     elif action == "update":
         sql = "update projects set project_name=? where project_id=?"
@@ -173,7 +177,7 @@ def projects():
         shutil.rmtree(class_dir)
         # Delete class
         sql = "delete from project_classes where class_id=?"
-        query_db(sql, (request.args.get('id')), True)
+        query_db(sql, (request.args.get('id'),), True)
         return jsonify(class_obj), 200
         # END
     elif action == "start_train":

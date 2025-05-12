@@ -2,15 +2,19 @@ import sqlite3
 import os,shutil
 import logging
 
-if not os.path.exists("./logs"):
-    os.makedirs("./logs")
 
+# Configure logger for module1
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='logs/db.log', level=logging.DEBUG)
-
+logger.setLevel(logging.DEBUG)
+fh1 = logging.FileHandler('logs/db.log')
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh1.setFormatter(formatter)
+logger.addHandler(fh1)
 
 # Initialize SQLite database
+
 def init_db():
+    print("Init db")
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     # ======== TABLE _ USER
@@ -47,9 +51,9 @@ def query_db(query, args=(), one=False):
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
-    logger.info("QUERY: " + query)
     cur.execute(query, args)
     if query.upper().find("SELECT")>-1:
+        logger.info("QUERY: " + query)
         r = [dict((cur.description[i][0], value) \
                    for i, value in enumerate(row)) for row in cur.fetchall()]
         cur.close()
@@ -67,9 +71,8 @@ def query_db(query, args=(), one=False):
         conn.close()
         return r[0]["last_insert_rowid()"]
     else:
-        logger.info(query)
+        logger.info("QUERY 2: " + query)
         conn.commit()
-        logger.info(query)
         cur.close()
         conn.close()
         return ()
