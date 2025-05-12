@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{{ g.app_name }} {{ g.app_version }} : {{ session["username"] }}</title>
+    <title>{{ g.app_name }} {{ g.app_version }} : Jobs -  {{ session["username"] }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Font Awesome -->
@@ -55,12 +55,12 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1>Project List</h1>
+                        <h1>Job List</h1>
                     </div>
                     <div class="col-sm-6">
                         <ol class="breadcrumb float-sm-right">
                             <li class="breadcrumb-item"><a href="#">Home</a></li>
-                            <li class="breadcrumb-item active">Project List</li>
+                            <li class="breadcrumb-item active">Job List</li>
                         </ol>
                     </div>
                 </div>
@@ -77,7 +77,6 @@
                                     <div class="form-inline">
                                         <input type="text" id=SEARCH_ID placeHolder="search"
                                                style="width:200px;" class="form-control mr-2"/>
-                                        <!--<input type="text" id=SEARCH_TIME class="form-control mr-2" /> -->
                                         <button class="btn btn-default" onclick="reload_table()"><i class="fas fa-search"></i> Search</button>
                                     </div>
                                 </div>

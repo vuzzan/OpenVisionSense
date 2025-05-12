@@ -13,7 +13,7 @@ $(document).ready(function() {
               this.removeFile(file);
             });
         },
-        url: "/projects?a=upload_file",
+        url: "/jobs?a=upload_file",
         clickable: true,
     });
 });
@@ -46,7 +46,7 @@ function edit_class(class_id)
     $('.help-block').empty(); // clear error string
     //Ajax Load data from ajax
     $.ajax({
-		url : "projects?a=edit_class"+"&id="+class_id,
+		url : "jobs?a=edit_class"+"&id="+class_id,
         type : "POST",
 		data:{
 			sessionId: $("#sessionId").val()
@@ -84,9 +84,9 @@ function saveClass()
     $('#btnSaveClass').attr('disabled', true); //set button disable
     var url;
     if(save_method == 'add') {
-        url = "/projects?a=add_class";
+        url = "/jobs?a=add_class";
     } else {
-        url = "/projects?a=update_class";
+        url = "/jobs?a=update_class";
     }
     // ajax adding data to database
     $.ajax({
@@ -121,7 +121,7 @@ function delete_class(id) {
     if (confirm('Are you sure to delete class - and all images inside ?')) {
         // ajax delete data to database
         $.ajax({
-			url : "/projects?a=delete_class" + "&id="+id,
+			url : "/jobs?a=delete_class" + "&id="+id,
             type : "POST",
 			data:{
 				sessionId: $("#sessionId").val()
@@ -142,7 +142,7 @@ function delete_image(id) {
     if (confirm('Are you sure to delete all images in this class ?')) {
         // ajax delete data to database
         $.ajax({
-			url : "/projects?a=delete_class_images" + "&id="+id,
+			url : "/jobs?a=delete_class_images" + "&id="+id,
             type : "POST",
 			data:{
 				sessionId: $("#sessionId").val()
@@ -167,7 +167,7 @@ function delete_image(id) {
                 <button aria-label="Close" class="close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body form">
-                <form action="/projects?a=upload_file" class="form-horizontal dropzone" id="form2" name="form2">
+                <form action="/jobs?a=upload_file" class="form-horizontal dropzone" id="form2" name="form2">
                     <input name="project_id" type="hidden" value="">
                     <input name="id" type="hidden" value="">
                     <div class="form-body">

@@ -1,0 +1,93 @@
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#upload2").dropzone({
+        init: function () {
+            clearDropzone = function(){
+                dropzone.removeAllFiles(true);
+            };
+            this.on("complete", function(file) {
+              this.removeFile(file);
+            });
+        },
+        url: "/jobs?a=upload_file_run_model",
+        clickable: true,
+    });
+});
+
+function run_model(project_id)
+{
+    $("#upload2").parent().show();
+    $(".dz-default").show();
+    $(".dz-preview").html("");
+    save_method = 'update';
+    //Ajax Load data from ajax
+    $.ajax({
+		url : "jobs?a=edit"+"&id="+project_id,
+        type : "POST",
+		data:{
+			sessionId: $("#sessionId").val()
+		},
+        dataType: "JSON",
+        success: function(data) {
+            console.log( data );
+            //
+            $('[name="id"]').val(data.project_id);
+            $('[name="project_name"]').val(data.project_name);
+            //
+            $('#modal_form_runmodel').modal(
+                {backdrop: 'static', keyboard: false},
+                'show'
+                ); // show bootstrap modal when complete loaded
+            $('.modal-title').text('Run Model'); // Set title to Bootstrap modal title
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Error when get data');
+        }
+    });
+}
+
+</script>
+
+<div class="modal fade" id="modal_form_runmodel" role="dialog">
+    <div class="modal-dialog modal-xl ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Form</div>
+                <button aria-label="Close" class="close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body form">
+                <form action="/jobs?a=upload_file_run_model" class="form-horizontal dropzone" id="form2" name="form2">
+                    <input name="project_id" type="hidden" value="">
+                    <input name="id" type="hidden" value="">
+                    <div class="form-body">
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">+Image</label>
+                            <div class="col-sm-10" id="upload2">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-body">
+                <div class="form-body">
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">Project</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="project_name" id="project_name" class="form-control" maxlength="20" placeHolder=""/>
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-9">
+
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" data-dismiss="modal" type="button"><i class="fas fa-close"></i> Close </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

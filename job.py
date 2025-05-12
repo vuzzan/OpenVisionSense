@@ -1,3 +1,5 @@
+import time
+
 from db import query_db
 import os,shutil
 import logging
@@ -9,6 +11,10 @@ fh1 = logging.FileHandler('logs/jobs.log')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh1.setFormatter(formatter)
 logger.addHandler(fh1)
+logger.addHandler(logging.StreamHandler())
+
+
+job_id = 0
 
 def start_job(job):
     logger.info("start_job ")
@@ -18,11 +24,19 @@ def start_job(job):
 
 
 def schedule_task():
+    global job_id
+
     #print("schedule_task This test runs every 3 seconds")
     sql = "select * from projects where project_status='QueueTraining'"
     job_list = query_db(sql, ())
-    # if len(job_list)==0:
-    #     logger.info("No job QueueTraining...")
+    if len(job_list)==0:
+        # Unit test job running
+        # job_id = job_id + 1
+        my_id = job_id
+        # logger.info("#" + str(my_id) + " Start QueueTraining...")
+        # time.sleep(10)
+        logger.info("#" + str(my_id) + " Job QueueTraining...END ")
+
     for job in job_list:
         job["classes"] = query_db("select * from project_classes where project_id=" + str(job["project_id"]), ())
         start_job(job)

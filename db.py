@@ -13,6 +13,7 @@ logger.addHandler(fh1)
 
 # Initialize SQLite database
 
+
 def init_db():
     print("Init db")
     conn = sqlite3.connect('database.db')
@@ -43,6 +44,20 @@ def init_db():
                      created_at TEXT NOT NULL DEFAULT current_timestamp,
                      updated_at TEXT NOT NULL DEFAULT current_timestamp
                      )''')
+    # ======== TABLE _ CLASSIFICATION
+    c.execute('''CREATE TABLE IF NOT EXISTS queue_jobs 
+                         (
+                         job_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                         project_id INTEGER,
+                         project_name TEXT DEFAULT NULL,
+                         source_file_path TEXT NOT NULL,
+                         result_file_path TEXT DEFAULT NULL,
+                         job_result INTEGER DEFAULT NULL,
+                         job_class TEXT DEFAULT NULL,
+                         job_status TEXT DEFAULT 'Wait Run',
+                         created_at TEXT NOT NULL DEFAULT current_timestamp,
+                         updated_at TEXT DEFAULT NULL
+                         )''')
     conn.commit()
     conn.close()
 

@@ -26,6 +26,8 @@ fh1 = logging.FileHandler('logs/web.log')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh1.setFormatter(formatter)
 logger.addHandler(fh1)
+logger.addHandler(logging.StreamHandler())
+
 
 @app.before_request
 def set_global_variables():
@@ -54,6 +56,14 @@ def base_static(filename):
     return send_from_directory(app.root_path + '/adminlte3/', filename)
 
 
+@app.route('/', methods=['GET'])
+def home_action():
+    if 'username' not in session:
+        return render_template('login.html')
+    # Next
+    return redirect("/projects", 302)
+
+
 @app.route('/logout', methods=['GET'])
 def logout_action():
     del session['username']
@@ -79,10 +89,13 @@ def login_action():
 
 @app.route('/projects', methods=['POST', 'GET'])
 def projects():
+    if 'username' not in session:
+        return render_template('login.html')
+    # Next
     action = request.args.get('a')
-    logger.info(action)
-    if action == "":
-        action = "listobj"
+    if action == None or action == "":
+        return render_template('index.html', session=session)
+
     if action == "listobj":
         sql = "SELECT * FROM projects"
         list_obj = query_db(sql)
@@ -103,8 +116,10 @@ def projects():
                 }
         return jsonify(data), 200
     elif action == "edit":
-        sql = "SELECT * FROM projects where project_id="+str(request.args.get('id'))
-        obj = query_db(sql, (), True)
+        sql = "SELECT * FROM projects where project_id=?"
+        obj = query_db(sql, (request.args.get('id'), ), True)
+        obj["classes"] = query_db("SELECT class_id, class_name FROM project_classes where project_id=?",
+                                  (request.args.get('id'), ))
         return jsonify(obj), 200
     elif action == "edit_class":
         sql = "SELECT * FROM project_classes where class_id=?"
@@ -200,8 +215,6 @@ def projects():
             return jsonify({"status": True, "msg": "Start train..."}), 200
         else:
             return jsonify({"status": False, "msg": check_valid_msg}), 200
-
-
     elif action == "delete":
         sql = "SELECT * FROM project_classes where project_id="+str(request.args.get('id'))
         class_list = query_db(sql, (), False)
@@ -253,22 +266,73 @@ def projects():
                 return jsonify({"result": False, "msg": 'No selected file'}), 200
             file_extension = os.path.splitext(file.filename)[1]
             if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
+                #filename = secure_filename(file.filename)
                 file.save(os.path.join(class_dir, str(file_count) + file_extension))
-                class_obj["file_path"] = class_dir + "/"+ str(file_count) + file_extension;
+                class_obj["file_path"] = class_dir + "/" + str(file_count) + file_extension;
         return jsonify(class_obj), 200
+    elif action == "upload_file_run_model":
+        sql = "SELECT * FROM projects where project_id=?"
+        obj = query_db(sql, (request.form["id"], ), True)
+        logger.info("upload_file_run_model")
+        # get file image
+        if 'file' not in request.files:
+            return jsonify({"result": False, "msg": "No files"}), 200
+        file = request.files['file']
+        project_dir = "/project_" + str(obj["project_id"]) + "/queue"
+        tmp_dir = g.data_dir + project_dir
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir)
+        logger.info("Save file " + tmp_dir)
+        if file.filename == '':
+            return jsonify({"result": False, "msg": 'No selected file'}), 200
+        file_extension = os.path.splitext(file.filename)[1]
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(tmp_dir, filename))
+            obj["file_path"] = tmp_dir + "/" + filename
+            sql = "insert into queue_jobs(project_id,project_name,source_file_path) values(?,?,?)"
+            job_id = query_db(sql, (request.form["id"], str(obj["project_name"]), os.path.join(project_dir, filename)))
+            obj["job_id"] = job_id
+            logger.info("add upload_file_run_model")
+        return jsonify(obj), 200
     return jsonify(()), 200
 
 
-@app.route('/home')
-def pass_action():
-    if 'username' in session:
-        return render_template('index.html', session=session)
-    return render_template('login.html')
+@app.route('/jobs', methods=['POST', 'GET'])
+def job_action():
+    if 'username' not in session:
+        return render_template('login.html')
+    # Next
+    action = request.args.get('a')
+    if action==None or action == "":
+        return render_template('jobs.html', session=session)
+
+    if action == "listobj":
+        sql = "SELECT * FROM queue_jobs"
+        list_obj = query_db(sql)
+        data = {"data": list_obj,
+                "draw": request.form["draw"],
+                "recordsFiltered": len(list_obj),
+                "recordsTotal": len(list_obj),
+                "sql": sql
+                }
+        return jsonify(data), 200
+    elif action == "edit":
+        sql = "SELECT * FROM projects where project_id=?"
+        obj = query_db(sql, (request.args.get('id'), ), True)
+        obj["classes"] = query_db("SELECT class_id, class_name FROM project_classes where project_id=?",
+                                  (request.args.get('id'), ))
+        return jsonify(obj), 200
+
+    return jsonify(()), 200
 
 
 if __name__ == '__main__':
     init_db()  # Initialize database when app starts
-    scheduler.add_job(id='Scheduled Task', func=job.schedule_task, trigger="interval", seconds=3)
+    scheduler.add_job(id='Scheduled Task',
+                      func=job.schedule_task,
+                      trigger="interval",
+                      seconds=3,
+                      )
     scheduler.start()
     app.run(debug=True, host="0.0.0.0", port=5000)
