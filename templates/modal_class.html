@@ -29,7 +29,7 @@ function add_class(project_id)
     $('#modal_form_class').modal(
         {backdrop: 'static', keyboard: false},
         'show'); // show bootstrap modal
-    $('.modal-title').text('Add Class'); // Set Title to Bootstrap modal title
+    $('.modal-title').text('Add Class to Project'); // Set Title to Bootstrap modal title
     $('#btnSaveClass').attr('disabled', false); //set button enable
     $("#upload1").parent().hide();
     $(".dz-default").hide();
@@ -62,7 +62,7 @@ function edit_class(class_id)
                 {backdrop: 'static', keyboard: false},
                 'show'
                 ); // show bootstrap modal when complete loaded
-            $('.modal-title').text('Edit'); // Set title to Bootstrap modal title
+            $('.modal-title').text('Edit Class'); // Set title to Bootstrap modal title
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Error when get data');
@@ -179,7 +179,9 @@ function delete_image(id) {
                             </div>
                         </div>
                         <div class="form-group row">
-                            <label class="col-sm-2 col-form-label">Image</label>
+                            <label class="col-sm-12 col-form-label">Add Training Images to Class (Drag and Drop image list)</label>
+                        </div>
+                        <div class="form-group row">
                             <div class="col-sm-10" id="upload1">
                             </div>
                         </div>
@@ -187,8 +189,7 @@ function delete_image(id) {
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-danger" data-dismiss="modal" type="button"><i class="fas fa-close"></i> Cancel
-                </button>
+                <button class="btn btn-danger" data-dismiss="modal" type="button"><i class="fas fa-close"></i> Cancel</button>
                 <button class="btn btn-primary" id="btnSaveClass" onclick="saveClass()" type="button"><i class="fas fa-save"></i> Save</button>
             </div>
         </div><!-- /.modal-content -->

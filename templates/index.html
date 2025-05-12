@@ -141,9 +141,9 @@ $(document).ready(function() {
 					    + '<span class="badge badge-warning navbar-badge">' + value.file_count +'</span>'
 					    + value.class_name
 					    + '</button> '
-		                + '<button class="btn btn-xs btn-warning" onclick="edit_class('+value.class_id+')">' + '<i class="fas fa-edit"></i>' + '</button>'
-                        + ' <button class="btn btn-xs btn-warning" onclick="delete_class('+value.class_id+')">' + '<i class="far fa-trash-alt"></i>' + '</button>'
-                        + ' <button class="btn btn-xs btn-danger" onclick="delete_image('+value.class_id+')">' + '<i class="far fa-trash-alt"></i>' + '</button>'
+		                + '<button class="btn btn-xs btn-success" onclick="edit_class('+value.class_id+')">' + '<i class="fas fa-plus"></i> Image' + '</button>'
+                        + ' <button class="btn btn-xs btn-warning" onclick="delete_image('+value.class_id+')">' + '<i class="far fa-trash-alt"></i> Del Image' + '</button>'
+                        + ' <button class="btn btn-xs btn-danger" onclick="delete_class('+value.class_id+')">' + '<i class="far fa-trash-alt"></i> Delete All' + '</button>'
 					    + '<br>';
 				});
 				if( row.classes.length==0 ){
@@ -158,19 +158,23 @@ $(document).ready(function() {
                 html += ' <span class="badge badge-success">'+row.project_status+'</span>';
 
                 html += '<br>';
-                if( row.project_status=='QueueTraining' ){
+                if( row.project_status=='QueueTraining'){
                 }
                 else{
-                    html += ' <button class="btn btn-xs btn-primary" onclick="start_train('+row.project_id+')">' + '<i class="fas fa-gear"></i> Start Training' + '</button>';
+                    if( row.classes.length>=2 ){
+                        html += ' <button class="btn btn-xs btn-primary" onclick="start_train('+row.project_id+')">' + '<i class="fas fa-gear"></i> Start Training' + '</button>';
+                    }
                 }
 
                 html += '<br>';
 
 		        if(  !row.project_model || row.project_model.length === 0 ){
-		            html += ' <button class="btn btn-xs btn-info">' + '<i class="fas fa-play"></i> No model</button>';
+		            //html += ' <button class="btn btn-xs btn-info">' + '<i class="fas fa-play"></i> No model</button>';
 		        }
 		        else{
-		            html += ' <button class="btn btn-xs btn-warning" onclick="run_model('+row.project_id+')">' + '<i class="fas fa-play"></i> Run ' + row.project_model + '</button>';
+		            if( row.classes.length>=2 && row.project_model.length>0 ){
+		                html += ' <button class="btn btn-xs btn-warning" onclick="run_model('+row.project_id+')">' + '<i class="fas fa-play"></i> Run ' + row.project_model + '</button>';
+                    }
 		        }
 
 
@@ -206,7 +210,7 @@ $(document).ready(function() {
 				return return_data;
 			}
         },
-		responsive: true,
+		responsive: false,
 		"columns": myColumnDefine,
 		"rowCallback":function ( row, data, index ) {
 			//console.log( data);
@@ -281,7 +285,7 @@ function add_row()
 	$('.form-group').removeClass('has-error'); // clear error class
     $('.help-block').empty(); // clear error string
     $('#modal_form').modal('show'); // show bootstrap modal
-    $('.modal-title').text('Thêm'); // Set Title to Bootstrap modal title
+    $('.modal-title').text('New Project'); // Set Title to Bootstrap modal title
 }
 function edit_row(id) {
     save_method = 'update';
@@ -303,7 +307,7 @@ function edit_row(id) {
             $('[name="project_name"]').val(data.project_name);
             //
             $('#modal_form').modal('show'); // show bootstrap modal when complete loaded
-            $('.modal-title').text('Edit'); // Set title to Bootstrap modal title
+            $('.modal-title').text('Edit Project'); // Set title to Bootstrap modal title
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Error when get data');
