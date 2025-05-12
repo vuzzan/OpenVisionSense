@@ -56,6 +56,12 @@ def base_static(filename):
     return send_from_directory(app.root_path + '/adminlte3/', filename)
 
 
+@app.route('/data/<path:filename>')
+def base_static_data_image(filename):
+    return send_from_directory(app.root_path + '/data/', filename)
+
+
+
 @app.route('/', methods=['GET'])
 def home_action():
     if 'username' not in session:
@@ -329,8 +335,13 @@ def job_action():
 
 if __name__ == '__main__':
     init_db()  # Initialize database when app starts
-    scheduler.add_job(id='Scheduled Task',
-                      func=job.schedule_task,
+    scheduler.add_job(id='Scheduled Task Training',
+                      func=job.schedule_task_training,
+                      trigger="interval",
+                      seconds=3,
+                      )
+    scheduler.add_job(id='Scheduled Task start_job_run_model',
+                      func=job.schedule_task_run_model,
                       trigger="interval",
                       seconds=3,
                       )

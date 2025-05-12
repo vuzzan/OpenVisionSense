@@ -9,7 +9,7 @@ $(document).ready(function() {
               this.removeFile(file);
             });
         },
-        url: "/jobs?a=upload_file_run_model",
+        url: "/projects?a=upload_file_run_model",
         clickable: true,
     });
 });
@@ -22,7 +22,7 @@ function run_model(project_id)
     save_method = 'update';
     //Ajax Load data from ajax
     $.ajax({
-		url : "jobs?a=edit"+"&id="+project_id,
+		url : "projects?a=edit"+"&id="+project_id,
         type : "POST",
 		data:{
 			sessionId: $("#sessionId").val()
@@ -38,7 +38,7 @@ function run_model(project_id)
                 {backdrop: 'static', keyboard: false},
                 'show'
                 ); // show bootstrap modal when complete loaded
-            $('.modal-title').text('Run Model'); // Set title to Bootstrap modal title
+            $('.modal-title').text('Add image to job queue'); // Set title to Bootstrap modal title
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Error when get data');
@@ -56,7 +56,7 @@ function run_model(project_id)
                 <button aria-label="Close" class="close" data-dismiss="modal" type="button"><span aria-hidden="true">×</span></button>
             </div>
             <div class="modal-body form">
-                <form action="/jobs?a=upload_file_run_model" class="form-horizontal dropzone" id="form2" name="form2">
+                <form action="/projects?a=upload_file_run_model" class="form-horizontal dropzone" id="form2" name="form2">
                     <input name="project_id" type="hidden" value="">
                     <input name="id" type="hidden" value="">
                     <div class="form-body">

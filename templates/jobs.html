@@ -81,14 +81,13 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-2 full-right">
-                                    <button class="btn btn-success pull-right" onclick="add_row()"><i class="fa fa-plus"></i> Add New</button>
                                 </div>
                             </div>
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body" style="overflow: auto;">
                             <table cellspacing="0"
-                                   class="table table-striped table-bordered nowrap dataTable"
+                                   class="table table-bordered nowrap dataTable"
                                    style="background-color:white"
                                    width="100%" id="table" style="background-color:#ffffff">
 
@@ -122,6 +121,40 @@ $(document).ready(function() {
 	});
 	//
 	var myColumnDefine = [
+		{"responsivePriority": 3, "orderable": false, "title": "#" , "data":"project_name" , "name":"project_name" , "class":"text-left",
+		    render: function ( data, type, row, meta ) {
+		        return ""+(meta.row + 1);
+		    }
+		},
+		{"responsivePriority": 3, "orderable": false, "title": "PeojectName" , "data":"project_name" , "name":"project_name" , "class":"text-left",
+		    render: function ( data, type, row, meta ) {
+		        return row.project_name;
+		    }
+		},
+		{"responsivePriority": 3, "orderable": false, "title": "File" , "data":"source_file_path" , "name":"source_file_path" , "class":"text-left",
+		    render: function ( data, type, row, meta ) {
+		        return '<img src="/data/' + row.source_file_path + '" width=200>';
+		    }
+		},
+		{"responsivePriority": 3, "orderable": false, "title": "job_status" , "data":"job_status" , "name":"job_status" , "class":"text-left",
+		    render: function ( data, type, row, meta ) {
+		        return ' <span class="badge badge-success">'+row.job_status+'</span>';
+		    }
+		},
+		{"responsivePriority": 3, "orderable": false, "title": "Result" , "data":"result_file_path" , "name":"result_file_path" , "class":"text-left",
+		    render: function ( data, type, row, meta ) {
+		        html = ''; //'<i class="fas fa-star text-warning"></i> ';
+		        if(  !row.result_file_path || row.result_file_path.length === 0 ){
+		            html += ' <span class="btn btn-xs btn-info">' + '<i class="fas fa-star text-warning"></i> Wait Queue...</span>';
+		        }
+		        else{
+		            html += ' <span class="badge badge-success">'+row.job_result+'</span>';
+		            html += ' <span class="badge badge-success">'+row.job_class+'</span>';
+		        }
+				return html;
+		    }
+		},
+		/*
 		{"responsivePriority": 3, "orderable": false, "title": "ProjectName" , "data":"project_name" , "name":"project_name" , "class":"text-left",
 		    render: function ( data, type, row, meta ) {
 				html = '<i class="fas fa-star text-warning"></i> ' + (meta.row + 1) +"." +data + '<br>';
@@ -161,13 +194,14 @@ $(document).ready(function() {
 				return html;
 			}
 		},
+		*/
 	];
     //datatables
     table = $('#table').on('preXhr.dt', function ( e, settings, data ) {
 			data.sessionId = $('#sessionId').val();
 		}).DataTable({
 		oLanguage: {
-			sProcessing: "<img src='ajax-loading.gif'>Loading..."
+			sProcessing: "<img src='static/ajax-loading.gif'>Loading..."
 		},
         "processing": true, //Feature control the processing indicator.
         "serverSide": true, //Feature control DataTables' server-side processing mode.

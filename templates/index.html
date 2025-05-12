@@ -82,7 +82,7 @@
                                     </div>
                                 </div>
                                 <div class="col-sm-2 full-right">
-                                    <button class="btn btn-success pull-right" onclick="add_row()"><i class="fa fa-plus"></i> Add New</button>
+                                    <button class="btn btn-success pull-right" onclick="add_row()"><i class="fa fa-plus"></i> New Project</button>
                                 </div>
                             </div>
                         </div>
@@ -123,27 +123,17 @@ $(document).ready(function() {
 	});
 	//
 	var myColumnDefine = [
-		{"responsivePriority": 3, "orderable": false, "title": "ProjectName" , "data":"project_name" , "name":"project_name" , "class":"text-left",
+		{"responsivePriority": 3, "orderable": false, "title": "Project Name" , "data":"project_name" , "name":"project_name" , "class":"text-left",
 		    render: function ( data, type, row, meta ) {
 				html = '<i class="fas fa-star text-warning"></i> ' + (meta.row + 1) +"." +data + '<br>';
-		        html += '<button class="btn btn-xs btn-success" onclick="edit_row('+row.project_id+')">' + '<i class="fas fa-edit"></i> Edit' + '</button>';
+		        html += '<button class="btn btn-xs btn-success" onclick="edit_row('+row.project_id+')">' + '<i class="fas fa-edit"></i> Edit Project' + '</button>';
+		        html += '<br>';
 		        html += ' <button class="btn btn-xs btn-primary" onclick="add_class('+row.project_id+')">' + '<i class="fas fa-plus"></i> Add Class' + '</button>';
-		        html += ' <button class="btn btn-xs btn-primary" onclick="start_train('+row.project_id+')">' + '<i class="fas fa-gear"></i> Training' + '</button>';
-
-		        if(  !row.project_model || row.project_model.length === 0 ){
-		            html += ' <button class="btn btn-xs btn-info">' + '<i class="fas fa-play"></i> No model</button>';
-		        }
-		        else{
-		            html += ' <button class="btn btn-xs btn-warning" onclick="run_model('+row.project_id+')">' + '<i class="fas fa-play"></i> Run ' + row.project_model + '</button>';
-		        }
-
-                html += '<br>';
-                html += ' <span class="badge badge-success">'+row.project_status+'</span>';
 
 		        return html;
 			}
 		},
-		{"responsivePriority": 2, "orderable": false, "title": "Classes" , "data":"created_at" , "name":"created_at" ,  "class":"text-left"
+		{"responsivePriority": 2, "orderable": false, "title": "Class Information" , "data":"created_at" , "name":"created_at" ,  "class":"text-left"
 		    , render: function ( data, type, row ) {
 		        html = '';
 		        $.each(row.classes, function (index, value) {
@@ -162,20 +152,45 @@ $(document).ready(function() {
 				return html;
 			}
 		},
+		{"responsivePriority": 2, "orderable": false, "title": "Status" , "data":"created_at" , "name":"created_at" ,  "class":"text-left"
+		    , render: function ( data, type, row ) {
+		        html = '';
+                html += ' <span class="badge badge-success">'+row.project_status+'</span>';
+
+                html += '<br>';
+                if( row.project_status=='QueueTraining' ){
+                }
+                else{
+                    html += ' <button class="btn btn-xs btn-primary" onclick="start_train('+row.project_id+')">' + '<i class="fas fa-gear"></i> Start Training' + '</button>';
+                }
+
+                html += '<br>';
+
+		        if(  !row.project_model || row.project_model.length === 0 ){
+		            html += ' <button class="btn btn-xs btn-info">' + '<i class="fas fa-play"></i> No model</button>';
+		        }
+		        else{
+		            html += ' <button class="btn btn-xs btn-warning" onclick="run_model('+row.project_id+')">' + '<i class="fas fa-play"></i> Run ' + row.project_model + '</button>';
+		        }
+
+
+				return html;
+			}
+		},
 	];
     //datatables
     table = $('#table').on('preXhr.dt', function ( e, settings, data ) {
 			data.sessionId = $('#sessionId').val();
 		}).DataTable({
 		oLanguage: {
-			sProcessing: "<img src='ajax-loading.gif'>Loading..."
+			sProcessing: "<img src='static/ajax-loading.gif'>Loading..."
 		},
         "processing": true, //Feature control the processing indicator.
         "serverSide": true, //Feature control DataTables' server-side processing mode.
         "order": [], //Initial no order.
         // Load data for the table's content from an Ajax source
         "ajax": {
-			"url": "jobs?a=listobj",
+			"url": "projects?a=listobj",
             "type": "POST",
 			"data": function ( d ) {
 				if($('#SEARCH_TIME').val()!==undefined){
@@ -275,7 +290,7 @@ function edit_row(id) {
     $('.help-block').empty(); // clear error string
     //Ajax Load data from ajax
     $.ajax({
-		url : "jobs?a=edit"+"&id="+id,
+		url : "projects?a=edit"+"&id="+id,
         type : "POST",
 		data:{
 			sessionId: $("#sessionId").val()
@@ -323,9 +338,9 @@ function save()
     $('#btnSave').attr('disabled', true); //set button disable
     var url;
     if(save_method == 'add') {
-        url = "/jobs?a=add";
+        url = "/projects?a=add";
     } else {
-        url = "/jobs?a=update";
+        url = "/projects?a=update";
     }
     // ajax adding data to database
     $.ajax({
@@ -362,7 +377,7 @@ function delete_project(id) {
         id = $('[name="id"]').val()
         // ajax delete data to database
         $.ajax({
-			url : "/jobs?a=delete" + "&id="+id,
+			url : "/projects?a=delete" + "&id="+id,
             type : "POST",
 			data:{
 				sessionId: $("#sessionId").val()
@@ -384,7 +399,7 @@ function start_train(id) {
     if (confirm('Will put project to training queue?')) {
         // ajax delete data to database
         $.ajax({
-			url : "/jobs?a=start_train" + "&id="+id,
+			url : "/projects?a=start_train" + "&id="+id,
             type : "POST",
 			data:{
 				sessionId: $("#sessionId").val()
