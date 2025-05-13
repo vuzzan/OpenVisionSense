@@ -110,8 +110,13 @@ def projects():
             for cls in classes:
                 # project_dir = g.data_dir + "/project_"+str(obj)
                 class_dir = g.data_dir + "/project_"+str(e["project_id"]) + "/class_" +str(cls["class_id"])
-                _, _, files = next(os.walk(class_dir))
-                cls["file_count"] = len(files)
+                cls["file_count"] = 0
+                if os.path.exists("./data"):
+                    _, _, files = next(os.walk(class_dir))
+                    cls["file_count"] = len(files)
+                else:
+                    os.makedirs(class_dir)
+
             e["classes"] = classes
             logger.info(e)
         data = {"data": list_obj,

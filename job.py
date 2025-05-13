@@ -14,6 +14,9 @@ logger.addHandler(fh1)
 logger.addHandler(logging.StreamHandler())
 job_id = 0
 
+if not os.path.exists("./data"):
+    os.makedirs("./data")
+
 
 def start_job_training(job):
     logger.info("start_job_training projects StartTraining")
