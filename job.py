@@ -21,6 +21,7 @@ def start_job_training(job):
     sql = "update projects set project_status='StartTraining' where project_id=?"
     query_db(sql, (job["project_id"], ), False)
     # Do training --
+    # traing Triet lam
     project_model = "project_model.file"
     project_status = "Training Done"        # Or training fail
 
@@ -36,17 +37,20 @@ def start_job_run_model(job):
     sql = "update queue_jobs set job_status='Start Job' where job_id=?"
     query_db(sql, (job["job_id"], ), False)
     # process job here
-    sql = "select * from projects where id=?"
+    sql = "select * from projects where project_id=?"
     project = query_db(sql, (job["project_id"], ), False)
     # Process with model
     model_file = project["project_model"]
     source_file_path = job["source_file_path"]
+    # do predict
+
     result_file_path = ""
-    job_class = 1
+    job_class = 14
+    job_result = "80%, class14"  #string
 
     # End competed
-    sql = "update queue_jobs set result_file_path=?, job_class=?, job_status='Done' where job_id=?"
-    query_db(sql, (result_file_path, job_class, job["job_id"]), False)
+    sql = "update queue_jobs set job_result=?, result_file_path=?, job_class=?, job_status='Done' where job_id=?"
+    query_db(sql, (job_result, result_file_path, job_class, job["job_id"]), False)
     logger.info("start_job2 queue_jobs done")
 
 
