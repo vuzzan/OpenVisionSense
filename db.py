@@ -2,7 +2,8 @@ import sqlite3
 import os,shutil
 import logging
 
-
+if not os.path.exists("./logs"):
+    os.makedirs("./logs")
 # Configure logger for module1
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -10,6 +11,8 @@ fh1 = logging.FileHandler('logs/db.log')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh1.setFormatter(formatter)
 logger.addHandler(fh1)
+
+
 
 # Initialize SQLite database
 
