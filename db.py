@@ -5,12 +5,12 @@ import logging
 if not os.path.exists("./logs"):
     os.makedirs("./logs")
 # Configure logger for module1
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger_db = logging.getLogger(__name__)
+logger_db.setLevel(logging.DEBUG)
 fh1 = logging.FileHandler('logs/db.log')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh1.setFormatter(formatter)
-logger.addHandler(fh1)
+logger_db.addHandler(fh1)
 
 
 
@@ -71,25 +71,25 @@ def query_db(query, args=(), one=False):
     cur = conn.cursor()
     cur.execute(query, args)
     if query.upper().find("SELECT")>-1:
-        logger.info("QUERY: " + query)
+        logger_db.info("QUERY: " + query)
         r = [dict((cur.description[i][0], value) \
                    for i, value in enumerate(row)) for row in cur.fetchall()]
         cur.close()
         conn.close()
-        logger.info(r)
+        logger_db.info(r)
         return (r[0] if r else None) if one else r
     elif query.upper().find("INSERT") > -1:
         cur.execute("SELECT last_insert_rowid()")
-        logger.info("SELECT last_insert_rowid()")
+        logger_db.info("SELECT last_insert_rowid()")
         r = [dict((cur.description[i][0], value) \
                   for i, value in enumerate(row)) for row in cur.fetchall()]
-        logger.info(r[0]["last_insert_rowid()"])
+        logger_db.info(r[0]["last_insert_rowid()"])
         conn.commit()
         cur.close()
         conn.close()
         return r[0]["last_insert_rowid()"]
     else:
-        logger.info("QUERY 2: " + query)
+        logger_db.info("QUERY 2: " + query)
         conn.commit()
         cur.close()
         conn.close()

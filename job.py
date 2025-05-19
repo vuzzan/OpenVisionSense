@@ -16,16 +16,16 @@ import sqlite3
 import shutil
 
 # Configure logger for module1
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger_job = logging.getLogger(__name__)
+logger_job.setLevel(logging.DEBUG)
 fh1 = logging.FileHandler('logs/jobs.log')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh1.setFormatter(formatter)
-logger.addHandler(fh1)
-logger.addHandler(logging.StreamHandler())
+logger_job.addHandler(fh1)
+logger_job.addHandler(logging.StreamHandler())
 job_id = 0
 
-data_dir = "D:/anomaly_dectection/OpenVisionSense-main/data"
+data_dir = "./data"
 
 if not os.path.exists("./data"):
     os.makedirs("./data")
@@ -35,13 +35,17 @@ if not os.path.exists("./data"):
 torch.manual_seed(42)
 random.seed(42)
 # Detect and use CUDA if available
+if torch.cuda.is_available():
+    logger_job("CUDA OK")
+else:
+    logger_job("CUDA NON")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+logger_job(f"Using device: {device}")
 
 
 # Prepare dataset folders
 def prepare_data(project):
-    print("Preparing data... start")
+    logger_job("Preparing data... start")
     data_root = Path("data/project_" + str(project["project_id"]))
     output_root = Path("data/project_" + str(project["project_id"]) + "/dataset")
     output_root.mkdir(parents=True, exist_ok=True)
@@ -73,12 +77,12 @@ def prepare_data(project):
             split_cls_dir = split / cls
             split_cls_dir.mkdir(parents=True, exist_ok=True)
             for img in imgs:
-                print("         ... copy: " + img.name)
+                logger_job("         ... copy: " + img.name)
                 shutil.copy(img, split_cls_dir / img.name)
-    print("Preparing data... done")
-    print("Train dir: ", train_dir)
-    print("Val dir: ", val_dir)
-    print("Preparing data... done")
+    logger_job("Preparing data... done")
+    logger_job("Train dir: ", train_dir)
+    logger_job("Val dir: ", val_dir)
+    logger_job("Preparing data... done")
     return train_dir, val_dir
 
 
@@ -87,7 +91,7 @@ def prepare_data(project):
 
 
 def start_training(project):
-    print("Starting training... Triet lam")
+    logger_job("Starting training...")
     print(project)
     # Preepare data
     [train_dir, val_dir] = prepare_data(project)
@@ -109,7 +113,7 @@ def start_training(project):
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
 
-    print("Loading datasets... Triet lam")
+    logger_job("Loading datasets...")
     # Load datasets
     train_ds = datasets.ImageFolder(train_dir, transform=train_tf)
     val_ds = datasets.ImageFolder(val_dir, transform=val_tf)
@@ -117,7 +121,7 @@ def start_training(project):
     val_loader = DataLoader(val_ds, batch_size=16)
 
     # Training setup
-    print("          Training setup")
+    logger_job("          Training setup")
     base_model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
     # Freeze base model (optional based on experimentation)
     for param in base_model.parameters():
@@ -136,7 +140,7 @@ def start_training(project):
 
     train_losses, val_losses, val_accuracies = [], [], []
 
-    print("          Training epoch start")
+    logger_job("          Training epoch start")
     for epoch in range(25):
         model.train()
         total_loss = 0
@@ -152,7 +156,7 @@ def start_training(project):
         train_losses.append(total_loss / len(train_loader))
 
         # Validation
-        print("          Training Validation")
+        logger_job("          Training Validation")
         model.eval()
         val_loss, correct, total = 0, 0, 0
         all_preds, all_labels = [], []
@@ -171,16 +175,16 @@ def start_training(project):
         val_losses.append(val_loss / len(val_loader))
         acc = correct / total
         val_accuracies.append(acc)
-        print(f"Epoch {epoch + 1}: Train Loss={train_losses[-1]:.4f}, Val Loss={val_losses[-1]:.4f}, Acc={acc:.4f}")
+        logger_job(f"Epoch {epoch + 1}: Train Loss={train_losses[-1]:.4f}, Val Loss={val_losses[-1]:.4f}, Acc={acc:.4f}")
 
     if epoch == 24:
         # Save model
         model_file = "model.pth"
         torch.save(model.state_dict(), "data/project_" + str(project["project_id"]) + "/" + model_file)
         shutil.rmtree("data/project_" + str(project["project_id"]) + "/dataset")
-        print(f"Model saved to {model_file}")
+        logger_job(f"Model saved to {model_file}")
         return model_file
-    print(f"Model fail...")
+    logger_job(f"Model fail...")
     return ""
 
 
@@ -189,10 +193,10 @@ def start_training(project):
 # print(f"Class names: {class_names}")
 
 def predict_single_image(project, model_file, image_path):
-    print(f"Predicting image:")
-    print(image_path)
-    print(model_file)
-    print("Preparing image... Triet lam")
+    logger_job(f"Predicting image:")
+    logger_job(image_path)
+    logger_job(model_file)
+    logger_job("Preparing image...")
     class_names = []
     for cls in project["classes"]:
         class_names.append(str(cls["class_name"]))
@@ -220,7 +224,7 @@ def predict_single_image(project, model_file, image_path):
     #
     ckpoints = torch.load(model_file)
     model.load_state_dict(ckpoints)
-    print("Loading model... Triet lam")
+    logger_job("Loading model...")
     model.eval()
     img = Image.open(image_path).convert("RGB")
     img_tensor = val_tf(img).unsqueeze(0).to(device)
@@ -232,22 +236,30 @@ def predict_single_image(project, model_file, image_path):
     pred_label = class_names[pred_class_idx]
 
     result = {}
-    result["result_file_path"] = ""
-    result["job_class"] = pred_label
-    result["job_result"] = ""
-    return result
 
     # # Lấy true label từ tên thư mục cha
     # true_label = Path(image_path).parent.name
 
     # # Hiển thị ảnh + label
-    # confidence = probs[pred_class_idx] * 100
-    # title = f"Pred: {pred_label} ({confidence:.1f}%) | True: {true_label}"
+    confidence = probs[pred_class_idx] * 100
+    #title = f"Predict: {pred_label} ({confidence:.1f}%) | True: {true_label}"
+    title = f"Predict: {pred_label} ({confidence:.1f}%)"
 
-    # plt.imshow(img)
-    # plt.title(title)
-    # plt.axis('off')
-    # plt.show()
+    result["job_class"] = pred_label
+    result["job_result"] = title
+
+    plt.imshow(img)
+    plt.title(title)
+    plt.axis('off')
+    #plt.show()
+
+    # /project_1/queue\6.jpg
+    file_dir = image_path.replace("queue\\", "queue/result_")
+    logger_job("Save result file:"+ file_dir)
+
+    plt.savefig(file_dir)
+    result["result_file_path"] = file_dir
+
 
     # # Biểu đồ xác suất
     # plt.figure(figsize=(4, 2))
@@ -259,12 +271,14 @@ def predict_single_image(project, model_file, image_path):
     # plt.tight_layout()
     # plt.show()
 
+    return result
+
 
 # End Triet lam ==========================
 
 def start_job_training(project):
-    logger.info("start_job_training projects StartTraining")
-    logger.info(project)
+    logger_job.info("start_job_training projects StartTraining")
+    logger_job.info(project)
     sql = "update projects set project_status='StartTraining' where project_id=?"
     query_db(sql, (project["project_id"],), False)
     # Do training --
@@ -280,12 +294,12 @@ def start_job_training(project):
     # Training done
     sql = "update projects set project_status=?,project_model=? where project_id=?"
     query_db(sql, (project_status, project_model, project["project_id"]), False)
-    logger.info("start_job projects StartTraining")
+    logger_job.info("start_job projects StartTraining")
 
 
 def start_job_run_model(job):
-    logger.info("start_job_run_model queue_jobs ")
-    logger.info(job)
+    logger_job.info("start_job_run_model queue_jobs ")
+    logger_job.info(job)
     sql = "update queue_jobs set job_status='Start Job' where job_id=?"
     query_db(sql, (job["job_id"],), False)
     # process job here
@@ -296,8 +310,8 @@ def start_job_run_model(job):
     # Process with model
     model_file = data_dir + "/project_" + str(job["project_id"]) + "/" + project["project_model"]
     source_file_path = data_dir + job["source_file_path"]
-    print(model_file)
-    print(source_file_path)
+    logger_job(model_file)
+    logger_job(source_file_path)
     # do predict
     result = predict_single_image(project, model_file, source_file_path)
     print(result)
@@ -309,7 +323,7 @@ def start_job_run_model(job):
     # End competed
     sql = "update queue_jobs set job_result=?, result_file_path=?, job_class=?, job_status='Done' where job_id=?"
     query_db(sql, (job_result, result_file_path, job_class, job["job_id"]), False)
-    logger.info("start_job2 queue_jobs done")
+    logger_job.info("queue_jobs done")
 
 
 def schedule_task_training():

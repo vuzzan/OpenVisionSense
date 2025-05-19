@@ -20,13 +20,13 @@ if not os.path.exists("./logs"):
     os.makedirs("./logs")
 
 # Configure logger for module1
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger_web = logging.getLogger(__name__)
+logger_web.setLevel(logging.DEBUG)
 fh1 = logging.FileHandler('logs/web.log')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh1.setFormatter(formatter)
-logger.addHandler(fh1)
-logger.addHandler(logging.StreamHandler())
+logger_web.addHandler(fh1)
+logger_web.addHandler(logging.StreamHandler())
 
 
 @app.before_request
@@ -118,7 +118,7 @@ def projects():
                     os.makedirs(class_dir)
 
             e["classes"] = classes
-            logger.info(e)
+            logger_web.info(e)
         data = {"data": list_obj,
                 "draw": request.form["draw"],
                 "recordsFiltered": len(list_obj),
@@ -148,10 +148,10 @@ def projects():
         # sql INSERT NEW PROJECT
         sql = "insert into projects(project_name) values ('"+request.form["project_name"]+"')"
         obj = query_db(sql)
-        logger.info(obj)
+        logger_web.info(obj)
         # CREATE NEW FOLDER FOR PROJECT
         project_dir = g.data_dir + "/project_"+str(obj)
-        logger.info(project_dir)
+        logger_web.info(project_dir)
         # MAKE DIRECTORY
         if not os.path.exists(project_dir):
             os.makedirs(project_dir)
@@ -162,10 +162,10 @@ def projects():
         # sql INSERT NEW CLASS to PROJECT
         sql = "insert into project_classes(project_id,class_name,project_name) values (?,?,?)"
         class_id = query_db(sql, (request.form["project_id"], request.form["class_name"], project["project_name"]))
-        logger.info("New class id=" + str(class_id))
+        logger_web.info("New class id=" + str(class_id))
         # CREATE NEW FOLDER FOR class_dir
         class_dir = g.data_dir + "/project_"+str(request.form["project_id"]) + "/class_" + str(class_id)
-        logger.info(class_dir)
+        logger_web.info(class_dir)
         # MAKE DIRECTORY
         if not os.path.exists(class_dir):
             os.makedirs(class_dir)
@@ -173,9 +173,9 @@ def projects():
     elif action == "delete_class_images":
         sql = "SELECT * FROM project_classes where class_id="+str(request.args.get('id'))
         class_obj = query_db(sql, (), True)
-        logger.info("delete_class_images")
+        logger_web.info("delete_class_images")
         class_dir = g.data_dir + "/project_" + str(class_obj["project_id"]) + "/class_" + str(class_obj["class_id"])
-        logger.info("delete_class_images file " + class_dir)
+        logger_web.info("delete_class_images file " + class_dir)
         for filename in os.listdir(class_dir):
             file_path = os.path.join(class_dir, filename)
             try:
@@ -184,13 +184,13 @@ def projects():
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                logger.info('Failed to delete '+file_path+'. Reason: '+e)
+                logger_web.info('Failed to delete ' + file_path + '. Reason: ' + e)
     elif action == "delete_class":
         sql = "SELECT * FROM project_classes where class_id="+str(request.args.get('id'))
         class_obj = query_db(sql, (), True)
-        logger.info("delete_class_images")
+        logger_web.info("delete_class_images")
         class_dir = g.data_dir + "/project_" + str(class_obj["project_id"]) + "/class_" + str(class_obj["class_id"])
-        logger.info("delete_class_images file " + class_dir)
+        logger_web.info("delete_class_images file " + class_dir)
         for filename in os.listdir(class_dir):
             file_path = os.path.join(class_dir, filename)
             try:
@@ -199,7 +199,7 @@ def projects():
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                logger.info('Failed to delete '+file_path+'. Reason: '+e)
+                logger_web.info('Failed to delete ' + file_path + '. Reason: ' + e)
         shutil.rmtree(class_dir)
         # Delete class
         sql = "delete from project_classes where class_id=?"
@@ -209,7 +209,7 @@ def projects():
     elif action == "start_train":
         sql = "SELECT * FROM project_classes where project_id="+str(request.args.get('id'))
         class_list = query_db(sql, (), False)
-        logger.info("start_train")
+        logger_web.info("start_train")
         project_dir = g.data_dir + "/project_" + request.args.get('id')
         # check valid
         check_valid_msg = ""
@@ -229,11 +229,11 @@ def projects():
     elif action == "delete":
         sql = "SELECT * FROM project_classes where project_id="+str(request.args.get('id'))
         class_list = query_db(sql, (), False)
-        logger.info("delete_project")
+        logger_web.info("delete_project")
         project_dir = g.data_dir + "/project_" + request.args.get('id')
         for class_obj in class_list:
             class_dir = project_dir + "/class_" + str(class_obj["class_id"])
-            logger.info("delete_project file " + project_dir)
+            logger_web.info("delete_project file " + project_dir)
             for filename in os.listdir(class_dir):
                 file_path = os.path.join(class_dir, filename)
                 try:
@@ -242,7 +242,7 @@ def projects():
                     elif os.path.isdir(file_path):
                         shutil.rmtree(file_path)
                 except Exception as e:
-                    logger.info('Failed to delete '+file_path+'. Reason: '+e)
+                    logger_web.info('Failed to delete ' + file_path + '. Reason: ' + e)
             shutil.rmtree(class_dir)
         if os.path.isdir(project_dir):
             shutil.rmtree(project_dir)
@@ -256,21 +256,21 @@ def projects():
     elif action == "upload_file":
         sql = "SELECT * FROM project_classes where class_id="+str(request.form["id"])
         class_obj = query_db(sql, (), True)
-        logger.info("upload_file")
-        logger.info(class_obj)
+        logger_web.info("upload_file")
+        logger_web.info(class_obj)
         # upload file - save file
         if request.method == 'POST':
             # check if the post request has the file part
-            logger.info("Save file ")
+            logger_web.info("Save file ")
             if 'file' not in request.files:
                 return jsonify({"result": False, "msg": "No files"}), 200
             file = request.files['file']
-            logger.info(file)
-            logger.info("Save file 2")
+            logger_web.info(file)
+            logger_web.info("Save file 2")
             # If the user does not select a file, the browser submits an
             # empty file without a filename.
             class_dir = g.data_dir + "/project_" + str(class_obj["project_id"]) + "/class_" + str(class_obj["class_id"])
-            logger.info("Save file " + class_dir)
+            logger_web.info("Save file " + class_dir)
             _, _, files = next(os.walk(class_dir))
             file_count = len(files) + 1
             if file.filename == '':
@@ -284,7 +284,7 @@ def projects():
     elif action == "upload_file_run_model":
         sql = "SELECT * FROM projects where project_id=?"
         obj = query_db(sql, (request.form["id"], ), True)
-        logger.info("upload_file_run_model")
+        logger_web.info("upload_file_run_model")
         # get file image
         if 'file' not in request.files:
             return jsonify({"result": False, "msg": "No files"}), 200
@@ -293,7 +293,7 @@ def projects():
         tmp_dir = g.data_dir + project_dir
         if not os.path.exists(tmp_dir):
             os.makedirs(tmp_dir)
-        logger.info("Save file " + tmp_dir)
+        logger_web.info("Save file " + tmp_dir)
         if file.filename == '':
             return jsonify({"result": False, "msg": 'No selected file'}), 200
         file_extension = os.path.splitext(file.filename)[1]
@@ -304,7 +304,7 @@ def projects():
             sql = "insert into queue_jobs(project_id,project_name,source_file_path) values(?,?,?)"
             job_id = query_db(sql, (request.form["id"], str(obj["project_name"]), os.path.join(project_dir, filename)))
             obj["job_id"] = job_id
-            logger.info("add upload_file_run_model")
+            logger_web.info("add upload_file_run_model")
         return jsonify(obj), 200
     return jsonify(()), 200
 
@@ -319,7 +319,7 @@ def job_action():
         return render_template('jobs.html', session=session)
 
     if action == "listobj":
-        sql = "SELECT * FROM queue_jobs"
+        sql = "SELECT * FROM queue_jobs order by job_id desc"
         list_obj = query_db(sql)
         data = {"data": list_obj,
                 "draw": request.form["draw"],
